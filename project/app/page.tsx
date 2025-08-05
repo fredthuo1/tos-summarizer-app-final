@@ -90,7 +90,7 @@ export default function Home() {
                                         "@type": "ListItem",
                                         "position": 1,
                                         "name": "Home",
-                                        "item": process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000'
+                                        "item": process.env.NODE_ENV === 'production' ? 'https://termsreviewer.com/' : 'http://localhost:3000'
                                     }
                                 ]
                             })
@@ -202,7 +202,7 @@ export default function Home() {
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-2">AI-Powered Analysis</h4>
-                                        <p className="text-gray-600 dark:text-gray-300 mb-2">Our GPT-4 powered AI examines 6 critical categories:</p>
+                                        <p className="text-gray-600 dark:text-gray-300 mb-2">Our Meta-Llama powered AI examines 6 critical categories:</p>
                                         <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 ml-4">
                                             <li className="flex items-center"><span className="w-1 h-1 bg-purple-500 rounded-full mr-2"></span>Data Privacy & Protection</li>
                                             <li className="flex items-center"><span className="w-1 h-1 bg-purple-500 rounded-full mr-2"></span>User Rights & Refunds</li>
