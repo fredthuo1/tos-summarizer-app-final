@@ -1,370 +1,188 @@
 import { AnalysisData, CategoryAnalysis } from './analyzer';
 
-// Chunking configuration
-const CHUNK_SIZE = 8000; // Characters per chunk
-const CHUNK_OVERLAP = 500; // Overlap between chunks to maintain context
-
-// Together AI configuration
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
-const TOGETHER_ENDPOINT = 'https://api.together.xyz/v1/chat/completions';
-
-interface ChunkAnalysis {
-    riskLevel: 'low' | 'medium' | 'high';
-    score: number;
-    concerns: string[];
-    highlights: string[];
-    categories: {
-        [key: string]: {
-            score: number;
-            riskLevel: 'low' | 'medium' | 'high';
-            findings: string[];
-        };
-    };
-    recommendations: string[];
-}
-
 export async function analyzeWithAI(content: string): Promise<AnalysisData> {
-    // Check if Together AI key is available
-    if (!TOGETHER_API_KEY) {
-        console.error('Together AI API key not found! Please set TOGETHER_API_KEY environment variable.');
-        throw new Error('AI analysis requires Together AI API key. Please check your environment configuration.');
-    }
+    console.log('🤖 Starting AI-powered analysis with Together AI');
 
-    // Check if content needs chunking
-    if (content.length > CHUNK_SIZE) {
-        console.log(`Content is ${content.length} characters, processing in chunks`);
-        return analyzeInChunks(content);
+    if (!process.env.TOGETHER_API_KEY) {
+        console.error('❌ Together AI API key not found, falling back to rule-based analysis');
+        return fallbackAnalysis(content);
     }
 
     try {
-        console.log('🤖 Using Together AI API for real AI analysis');
+        // For very large content, we'll process in chunks
+        if (content.length > 8000) {
+            console.log(`📄 Large content detected (${content.length} chars), processing in chunks`);
+            return await analyzeInChunks(content);
+        }
+
+        console.log(`🔍 Analyzing content with AI (${content.length} characters)`);
         return await analyzeSingleDocument(content);
-    } catch (error) {
-        console.error('❌ AI Analysis Error:', error);
-        throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-}
-
-async function analyzeInChunks(content: string): Promise<AnalysisData> {
-    try {
-        const chunks = createChunks(content);
-        console.log(`Processing ${chunks.length} chunks`);
-
-        const chunkAnalyses: ChunkAnalysis[] = [];
-
-        // Analyze each chunk
-        for (let i = 0; i < chunks.length; i++) {
-            console.log(`Analyzing chunk ${i + 1}/${chunks.length}`);
-            try {
-                const chunkAnalysis = await analyzeChunk(chunks[i], i + 1, chunks.length);
-                chunkAnalyses.push(chunkAnalysis);
-
-                // Add delay between requests to avoid rate limiting
-                if (i < chunks.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            } catch (error) {
-                console.error(`Error analyzing chunk ${i + 1}:`, error);
-                // Continue with other chunks even if one fails
-            }
-        }
-
-        if (chunkAnalyses.length === 0) {
-            throw new Error('All chunk analyses failed');
-        }
-
-        // Merge chunk analyses
-        return mergeChunkAnalyses(chunkAnalyses, content);
 
     } catch (error) {
-        console.error('Chunked analysis failed, falling back to rule-based analysis:', error);
+        console.error('❌ AI analysis failed, falling back to rule-based analysis:', error);
         return fallbackAnalysis(content);
     }
 }
 
-function createChunks(content: string): string[] {
+async function analyzeInChunks(content: string): Promise<AnalysisData> {
+    const chunkSize = 6000;
     const chunks: string[] = [];
-    let start = 0;
 
-    while (start < content.length) {
-        let end = start + CHUNK_SIZE;
+    // Split content into overlapping chunks
+    for (let i = 0; i < content.length; i += chunkSize) {
+        const chunk = content.slice(i, i + chunkSize + 500); // 500 char overlap
+        chunks.push(chunk);
+    }
 
-        // If this isn't the last chunk, try to break at a sentence or paragraph
-        if (end < content.length) {
-            // Look for paragraph break first
-            const paragraphBreak = content.lastIndexOf('\n\n', end);
-            if (paragraphBreak > start + CHUNK_SIZE / 2) {
-                end = paragraphBreak;
-            } else {
-                // Look for sentence break
-                const sentenceBreak = content.lastIndexOf('. ', end);
-                if (sentenceBreak > start + CHUNK_SIZE / 2) {
-                    end = sentenceBreak + 1;
-                }
-            }
+    console.log(`📊 Processing ${chunks.length} chunks for comprehensive analysis`);
+
+    // Analyze each chunk
+    const chunkAnalyses: AnalysisData[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+        console.log(`🔍 Analyzing chunk ${i + 1}/${chunks.length}`);
+        try {
+            const analysis = await analyzeSingleDocument(chunks[i]);
+            chunkAnalyses.push(analysis);
+        } catch (error) {
+            console.warn(`⚠️ Chunk ${i + 1} analysis failed, using fallback`);
+            chunkAnalyses.push(fallbackAnalysis(chunks[i]));
         }
-
-        chunks.push(content.slice(start, end));
-        start = end - CHUNK_OVERLAP; // Overlap to maintain context
     }
 
-    return chunks;
+    // Merge results from all chunks
+    return mergeChunkAnalyses(chunkAnalyses, content);
 }
 
-async function analyzeChunk(chunk: string, chunkNumber: number, totalChunks: number): Promise<ChunkAnalysis> {
-    const prompt = `
-You are analyzing chunk ${chunkNumber} of ${totalChunks} from a terms of service document. Focus on identifying specific risks and positive aspects in this section.
-
-Document chunk to analyze:
-${chunk}
-
-Provide analysis in this JSON format:
-{
-  "riskLevel": "low|medium|high",
-  "score": 0-100,
-  "concerns": ["specific concerns found in this chunk"],
-  "highlights": ["positive aspects found in this chunk"],
-  "categories": {
-    "dataPrivacy": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]},
-    "userRights": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]},
-    "liability": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]},
-    "termination": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]},
-    "contentOwnership": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]},
-    "disputeResolution": {"score": 0-100, "riskLevel": "low|medium|high", "findings": ["findings"]}
-  },
-  "recommendations": ["recommendations based on this chunk"]
-}
-
-Focus on what's actually present in this chunk. If a category isn't covered in this chunk, give it a neutral score of 50.
-`;
-
-    const response = await fetch(TOGETHER_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${TOGETHER_API_KEY}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
-            messages: [
-                {
-                    role: "system",
-                    content: "You are a legal expert analyzing a portion of a terms of service document. Provide specific analysis for the content in this chunk."
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ],
-            temperature: 0.2,
-            max_tokens: 2000
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content;
-
-    if (!aiResponse) {
-        throw new Error('No response from AI');
-    }
-
-    // Parse JSON response
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
-    return JSON.parse(jsonString);
-}
-
-function mergeChunkAnalyses(chunkAnalyses: ChunkAnalysis[], originalContent: string): AnalysisData {
-    // Calculate weighted averages and merge findings
-    const totalChunks = chunkAnalyses.length;
-
-    // Merge scores (weighted average)
+function mergeChunkAnalyses(chunkAnalyses: AnalysisData[], originalContent: string): AnalysisData {
+    // Calculate average scores
     const avgScore = Math.round(
-        chunkAnalyses.reduce((sum, chunk) => sum + chunk.score, 0) / totalChunks
+        chunkAnalyses.reduce((sum, analysis) => sum + analysis.score, 0) / chunkAnalyses.length
     );
 
-    // Determine overall risk level based on highest risk found
-    const riskLevels = chunkAnalyses.map(chunk => chunk.riskLevel);
-    const overallRiskLevel = riskLevels.includes('high') ? 'high' :
-        riskLevels.includes('medium') ? 'medium' : 'low';
+    // Determine overall risk level
+    const riskLevel = avgScore <= 30 ? 'low' : avgScore <= 60 ? 'medium' : 'high';
 
-    // Merge concerns and highlights (deduplicate)
+    // Merge concerns and highlights, removing duplicates
     const allConcerns = chunkAnalyses.flatMap(chunk => chunk.concerns);
     const allHighlights = chunkAnalyses.flatMap(chunk => chunk.highlights);
     const uniqueConcerns = Array.from(new Set(allConcerns)).slice(0, 8);
     const uniqueHighlights = Array.from(new Set(allHighlights)).slice(0, 5);
 
     // Merge category analyses
-    const categoryNames = ['dataPrivacy', 'userRights', 'liability', 'termination', 'contentOwnership', 'disputeResolution'];
-    const mergedCategories: any = {};
+    const categories = {
+        dataPrivacy: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.dataPrivacy)),
+        userRights: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.userRights)),
+        liability: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.liability)),
+        termination: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.termination)),
+        contentOwnership: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.contentOwnership)),
+        disputeResolution: mergeCategoryAnalyses(chunkAnalyses.map(c => c.categories.disputeResolution))
+    };
 
-    categoryNames.forEach(categoryName => {
-        const categoryData = chunkAnalyses.map(chunk => chunk.categories[categoryName]).filter(Boolean);
-
-        if (categoryData.length > 0) {
-            const avgCategoryScore = Math.round(
-                categoryData.reduce((sum, cat) => sum + cat.score, 0) / categoryData.length
-            );
-
-            const categoryRiskLevels = categoryData.map(cat => cat.riskLevel);
-            const categoryRiskLevel = categoryRiskLevels.includes('high') ? 'high' :
-                categoryRiskLevels.includes('medium') ? 'medium' : 'low';
-
-            const allFindings = categoryData.flatMap(cat => cat.findings);
-            const uniqueFindings = Array.from(new Set(allFindings)).slice(0, 3);
-
-            mergedCategories[categoryName] = {
-                score: avgCategoryScore,
-                riskLevel: categoryRiskLevel,
-                findings: uniqueFindings,
-                explanation: getCategoryExplanation(categoryName)
-            };
-        } else {
-            mergedCategories[categoryName] = {
-                score: 50,
-                riskLevel: 'medium' as const,
-                findings: [],
-                explanation: getCategoryExplanation(categoryName)
-            };
-        }
-    });
+    // Generate comprehensive summary
+    const summary = `This comprehensive analysis processed ${chunkAnalyses.length} document sections. Overall risk level is ${riskLevel} with ${uniqueConcerns.length} key concerns identified across multiple sections. ${uniqueHighlights.length > 0 ? `The document includes ${uniqueHighlights.length} positive user protections. ` : ''}${avgScore > 70 ? 'Exercise significant caution before accepting these terms.' : avgScore > 40 ? 'Review carefully and consider the implications.' : 'Terms appear reasonable with standard commercial practices.'}`;
 
     // Merge recommendations
     const allRecommendations = chunkAnalyses.flatMap(chunk => chunk.recommendations);
     const uniqueRecommendations = Array.from(new Set(allRecommendations)).slice(0, 5);
 
-    // Generate summary
-    const summary = `This comprehensive document analysis processed ${totalChunks} sections totaling ${originalContent.length} characters. Overall risk level is ${overallRiskLevel} with ${uniqueConcerns.length} key concerns identified across multiple sections. ${uniqueHighlights.length > 0 ? `The document includes ${uniqueHighlights.length} positive user protections. ` : ''}${overallRiskLevel === 'high' ? 'Exercise significant caution before accepting these terms.' : overallRiskLevel === 'medium' ? 'Review carefully and consider the trade-offs.' : 'Terms appear reasonable for most users.'}`;
-
     return {
-        riskLevel: overallRiskLevel,
+        riskLevel: riskLevel as 'low' | 'medium' | 'high',
         score: avgScore,
         concerns: uniqueConcerns,
         highlights: uniqueHighlights,
         summary,
-        categories: mergedCategories,
-        recommendations: uniqueRecommendations.length > 0 ? uniqueRecommendations : [
-            'Review the complete document carefully',
-            'Pay attention to sections with higher risk scores',
-            'Consider the cumulative impact of all terms',
-            'Keep a copy of the terms for your records'
-        ],
+        categories,
+        recommendations: uniqueRecommendations,
         keyMetrics: {
-            readabilityScore: calculateReadabilityScore(originalContent),
+            readabilityScore: Math.round(
+                chunkAnalyses.reduce((sum, analysis) => sum + analysis.keyMetrics.readabilityScore, 0) / chunkAnalyses.length
+            ),
             lengthAnalysis: getLengthAnalysis(originalContent.trim().split(/\s+/).length),
-            lastUpdated: extractLastUpdated(originalContent),
-            jurisdiction: extractJurisdiction(originalContent)
+            lastUpdated: chunkAnalyses.find(c => c.keyMetrics.lastUpdated)?.keyMetrics.lastUpdated || null,
+            jurisdiction: chunkAnalyses.find(c => c.keyMetrics.jurisdiction)?.keyMetrics.jurisdiction || null
         }
     };
 }
 
-function getCategoryExplanation(categoryName: string): string {
-    const explanations = {
-        dataPrivacy: 'Analyzes how your personal information is collected, used, and protected',
-        userRights: 'Examines your rights as a user, including refunds, account control, and legal recourse',
-        liability: 'Reviews who is responsible for damages and what protections exist',
-        termination: 'Covers how and when your account can be terminated',
-        contentOwnership: 'Determines who owns the content you create or upload',
-        disputeResolution: 'Outlines how conflicts between you and the service are resolved'
+function mergeCategoryAnalyses(categories: CategoryAnalysis[]): CategoryAnalysis {
+    const avgScore = Math.round(
+        categories.reduce((sum, cat) => sum + cat.score, 0) / categories.length
+    );
+    const riskLevel = avgScore <= 30 ? 'low' : avgScore <= 60 ? 'medium' : 'high';
+    const allFindings = categories.flatMap(cat => cat.findings);
+    const uniqueFindings = Array.from(new Set(allFindings)).slice(0, 3);
+
+    return {
+        score: avgScore,
+        riskLevel: riskLevel as 'low' | 'medium' | 'high',
+        findings: uniqueFindings,
+        explanation: categories[0]?.explanation || 'Category analysis completed'
     };
-    return explanations[categoryName as keyof typeof explanations] || '';
-}
-
-function calculateReadabilityScore(content: string): number {
-    const words = content.trim().split(/\s+/).length;
-    const sentences = content.split(/[.!?]+/).length - 1;
-    const avgWordsPerSentence = words / Math.max(sentences, 1);
-    return Math.max(0, Math.min(100, 100 - (avgWordsPerSentence - 15) * 2));
-}
-
-function getLengthAnalysis(wordCount: number): string {
-    if (wordCount < 500) return 'Very Short - May lack important details';
-    if (wordCount < 1500) return 'Short - Covers basic terms';
-    if (wordCount < 3000) return 'Medium - Comprehensive coverage';
-    if (wordCount < 5000) return 'Long - Detailed terms';
-    return 'Very Long - Extensive legal document';
 }
 
 async function analyzeSingleDocument(content: string): Promise<AnalysisData> {
-    const prompt = `
-You are a legal expert specializing in terms of service and privacy policy analysis. Analyze the following document and provide a comprehensive assessment.
+    const prompt = `Analyze this terms of service document and provide a comprehensive legal risk assessment. Return ONLY valid JSON in this exact format:
 
-Document to analyze:
-${content}
-
-Please provide your analysis in the following JSON format:
 {
   "riskLevel": "low|medium|high",
   "score": 0-100,
-  "concerns": ["array of specific concerns found"],
-  "highlights": ["array of positive aspects found"],
-  "summary": "comprehensive summary of the document",
+  "concerns": ["concern1", "concern2"],
+  "highlights": ["positive1", "positive2"],
+  "summary": "Executive summary of the analysis",
   "categories": {
     "dataPrivacy": {
       "score": 0-100,
       "riskLevel": "low|medium|high",
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of data privacy implications"
+      "findings": ["finding1", "finding2"],
+      "explanation": "How personal data is collected and used"
     },
     "userRights": {
       "score": 0-100,
       "riskLevel": "low|medium|high", 
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of user rights implications"
+      "findings": ["finding1", "finding2"],
+      "explanation": "User rights including refunds and account control"
     },
     "liability": {
       "score": 0-100,
       "riskLevel": "low|medium|high",
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of liability implications"
+      "findings": ["finding1", "finding2"], 
+      "explanation": "Liability limitations and warranty disclaimers"
     },
     "termination": {
       "score": 0-100,
       "riskLevel": "low|medium|high",
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of termination implications"
+      "findings": ["finding1", "finding2"],
+      "explanation": "Account termination policies and procedures"
     },
     "contentOwnership": {
       "score": 0-100,
       "riskLevel": "low|medium|high",
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of content ownership implications"
+      "findings": ["finding1", "finding2"],
+      "explanation": "Rights to user-generated content"
     },
     "disputeResolution": {
       "score": 0-100,
       "riskLevel": "low|medium|high",
-      "findings": ["specific findings for this category"],
-      "explanation": "explanation of dispute resolution implications"
+      "findings": ["finding1", "finding2"],
+      "explanation": "How disputes are resolved"
     }
   },
-  "recommendations": ["array of actionable recommendations"],
+  "recommendations": ["recommendation1", "recommendation2"],
   "keyMetrics": {
     "readabilityScore": 0-100,
-    "lengthAnalysis": "description of document length",
-    "lastUpdated": "extracted date or null",
-    "jurisdiction": "extracted jurisdiction or null"
+    "lengthAnalysis": "Short|Medium|Long description",
+    "lastUpdated": "date or null",
+    "jurisdiction": "location or null"
   }
 }
 
-Focus on:
-1. Data privacy and user information handling
-2. User rights including refunds and account control
-3. Liability limitations and user responsibilities
-4. Account termination conditions
-5. Content ownership and licensing
-6. Dispute resolution mechanisms
+Document to analyze:
+${content}`;
 
-Provide specific, actionable insights that help users understand the real implications of agreeing to these terms.
-`;
-
-    const response = await fetch(TOGETHER_ENDPOINT, {
+    const response = await fetch('https://api.together.xyz/v1/chat/completions', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${TOGETHER_API_KEY}`,
+            'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -413,7 +231,6 @@ Provide specific, actionable insights that help users understand the real implic
     // Validate and ensure all required fields are present
     return validateAnalysisData(analysisData);
 }
-
 
 function validateAnalysisData(data: any): AnalysisData {
     // Ensure all required fields are present with defaults
@@ -563,13 +380,18 @@ function fallbackAnalysis(content: string): AnalysisData {
         ],
         keyMetrics: {
             readabilityScore: Math.max(20, Math.min(100, 100 - Math.floor(wordCount / 25))),
-            lengthAnalysis: wordCount < 800 ? 'Short - May lack important details' :
-                wordCount < 2500 ? 'Medium - Standard length' :
-                    wordCount < 5000 ? 'Long - Comprehensive coverage' : 'Very Long - Extensive legal document',
+            lengthAnalysis: getLengthAnalysis(wordCount),
             lastUpdated: extractLastUpdated(content),
             jurisdiction: extractJurisdiction(content)
         }
     };
+}
+
+function getLengthAnalysis(wordCount: number): string {
+    if (wordCount < 800) return 'Short - May lack important details';
+    if (wordCount < 2500) return 'Medium - Standard length';
+    if (wordCount < 5000) return 'Long - Comprehensive coverage';
+    return 'Very Long - Extensive legal document';
 }
 
 function extractLastUpdated(content: string): string | null {
