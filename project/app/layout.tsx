@@ -1,9 +1,11 @@
-import './globals.css';
+﻿import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Shield } from 'lucide-react';
 import Script from 'next/script';
+import Link from 'next/link';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
     publisher: 'Terms Analyzer',
     category: 'Legal Technology',
     robots: 'index, follow',
-    metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://termsreviewer.com/' : 'http://localhost:3000'),
+    metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000'),
     openGraph: {
         title: 'Terms Analyzer - AI-Powered Terms of Service Analysis',
         description: 'Free AI-powered terms of service analyzer. Instantly analyze privacy policies and legal documents with detailed risk assessments.',
@@ -56,7 +58,7 @@ const jsonLd = {
     '@type': 'WebApplication',
     name: 'Terms Analyzer',
     description: 'AI-powered terms of service and privacy policy analyzer',
-    url: process.env.NODE_ENV === 'production' ? 'https://termsreviewer.com/' : 'http://localhost:3000',
+    url: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000',
     applicationCategory: 'LegalApplication',
     operatingSystem: 'Web Browser',
     offers: {
@@ -101,14 +103,14 @@ export default function RootLayout({
                 {/* Google AdSense */}
                 <Script
                     async
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8588865009381819"
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID"
                     crossOrigin="anonymous"
                     strategy="afterInteractive"
                 />
 
                 {/* Google Analytics */}
                 <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-8NRYVJNL3R"
+                    src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"
                     strategy="afterInteractive"
                 />
                 <Script id="google-analytics" strategy="afterInteractive">
@@ -127,7 +129,80 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <ErrorBoundary>
+                        {/* Navigation */}
+                        <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+                            <div className="container mx-auto px-4">
+                                <div className="flex items-center justify-between h-16">
+                                    <Link href="/" className="flex items-center space-x-2 font-bold text-xl text-gray-900 dark:text-white">
+                                        <Shield className="h-6 w-6 text-blue-600" />
+                                        <span>Terms Analyzer</span>
+                                    </Link>
+                                    <div className="hidden md:flex items-center space-x-6">
+                                        <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            Home
+                                        </Link>
+                                        <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            About
+                                        </Link>
+                                        <Link href="/legal" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            Legal
+                                        </Link>
+                                        <Link href="/contact" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            Contact
+                                        </Link>
+                                        <Link href="/test" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            Test
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
                         {children}
+
+                        {/* Footer */}
+                        <footer className="bg-gray-900 dark:bg-slate-950 text-white mt-16">
+                            <div className="container mx-auto px-4 py-12">
+                                <div className="grid md:grid-cols-4 gap-8">
+                                    <div className="md:col-span-2">
+                                        <div className="flex items-center space-x-2 mb-4">
+                                            <Shield className="h-6 w-6 text-blue-400" />
+                                            <span className="font-bold text-xl">Terms Analyzer</span>
+                                        </div>
+                                        <p className="text-gray-300 mb-4 max-w-md">
+                                            AI-powered terms of service analysis to help you understand your digital rights and make informed decisions.
+                                        </p>
+                                        <p className="text-sm text-gray-400">
+                                            © 2024 Terms Analyzer. All rights reserved.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="font-semibold mb-4">Product</h4>
+                                        <ul className="space-y-2 text-sm text-gray-300">
+                                            <li><Link href="/" className="hover:text-blue-400 transition-colors">Analyze Terms</Link></li>
+                                            <li><Link href="/test" className="hover:text-blue-400 transition-colors">Test Pipeline</Link></li>
+                                            <li><Link href="/about" className="hover:text-blue-400 transition-colors">How It Works</Link></li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="font-semibold mb-4">Legal</h4>
+                                        <ul className="space-y-2 text-sm text-gray-300">
+                                            <li><Link href="/legal" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
+                                            <li><Link href="/legal" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
+                                            <li><Link href="/legal" className="hover:text-blue-400 transition-colors">Disclaimer</Link></li>
+                                            <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+                                    <p className="text-sm text-gray-400">
+                                        Made with ❤️ for digital transparency and user rights
+                                    </p>
+                                </div>
+                            </div>
+                        </footer>
                     </ErrorBoundary>
                 </ThemeProvider>
             </body>
