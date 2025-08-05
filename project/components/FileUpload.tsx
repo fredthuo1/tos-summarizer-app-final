@@ -6,6 +6,7 @@ import { processFile } from '@/lib/file-processor';
 import { AnalysisResult } from '@/app/page';
 import { Upload, File, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { trackAnalysis } from '@/lib/analytics';
 
 interface FileUploadProps {
     onAnalysis: (result: AnalysisResult) => void;
@@ -34,13 +35,8 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
     }, []);
 
     const validateFile = (file: File): boolean => {
-        const maxSize = 5 * 1024 * 1024;
-        const allowedTypes = [
-            'text/plain',
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
         if (file.size > maxSize) {
             setError('File size must be less than 5MB');
@@ -55,20 +51,36 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
         return true;
     };
 
-    const handleFiles = useCallback(async (files: FileList) => {
+    const readFileContent = async (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                resolve(content);
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsText(file);
+        });
+    };
+
+    const handleFiles = async (files: FileList) => {
         const file = files[0];
         if (!file) return;
 
         setError('');
+
         if (!validateFile(file)) return;
 
         try {
-            const content = await processFile(file);
+            let content: string;
+
+            content = await processFile(file);
+
             setUploadedFile({ file, content });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to process file. Please try again.');
         }
-    }, []);
+    };
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -78,7 +90,7 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             handleFiles(e.dataTransfer.files);
         }
-    }, [handleFiles]);
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
@@ -92,6 +104,7 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
 
         setIsAnalyzing(true);
         try {
+            // Send to API for analysis
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: {
@@ -100,7 +113,7 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
                 body: JSON.stringify({
                     content: uploadedFile.content,
                     source: uploadedFile.file.name,
-                    type: 'file',
+                    type: 'file'
                 }),
             });
 
@@ -117,10 +130,11 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
                 type: 'file',
                 content: uploadedFile.content,
                 analysis: data.analysis,
-                timestamp: new Date(),
+                timestamp: new Date()
             };
 
             onAnalysis(result);
+            trackAnalysis('file', data.analysis.riskLevel, data.analysis.score);
             setUploadedFile(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to analyze file. Please try again.');
@@ -154,6 +168,7 @@ export function FileUpload({ onAnalysis, isAnalyzing, setIsAnalyzing }: FileUplo
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         disabled={isAnalyzing}
                     />
+
                     <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                         Drop your file here, or click to browse

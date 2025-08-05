@@ -9,6 +9,7 @@ import { Shield, AlertTriangle, CheckCircle, Download, Calendar, ExternalLink, F
 import { AdSenseUnit } from '@/components/AdSenseUnit';
 import { exportToPDF } from '@/lib/pdf-exporter';
 import { useState } from 'react';
+import { trackPDFExport } from '@/lib/analytics';
 
 interface AnalysisResultsProps {
     results: AnalysisResult[];
@@ -82,6 +83,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
         setExportingPDF(result.id);
         try {
             await exportToPDF(result);
+            trackPDFExport(result.analysis.riskLevel);
         } catch (error) {
             console.error('PDF export failed:', error);
             // You could add a toast notification here
