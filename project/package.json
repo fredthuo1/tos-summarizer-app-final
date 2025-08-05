@@ -2,15 +2,15 @@
   "name": "nextjs",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" next dev",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=8192\" next build",
-    "build:analyze": "NODE_OPTIONS=\"--max-old-space-size=8192\" ANALYZE=true next build",
-    "start": "NODE_OPTIONS=\"--max-old-space-size=8192\" next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
-    "type-check": "tsc --noEmit"
-  },
+    "scripts": {
+        "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" next dev",
+        "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build",
+        "build:analyze": "NODE_OPTIONS=\"--max-old-space-size=8192\" ANALYZE=true next build",
+        "start": "NODE_OPTIONS=\"--max-old-space-size=8192\" next start",
+        "lint": "next lint",
+        "lint:fix": "next lint --fix",
+        "type-check": "tsc --noEmit"
+    },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "13.5.1",
@@ -72,5 +72,8 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "cross-env": "^10.0.0"
   }
 }

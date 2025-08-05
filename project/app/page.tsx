@@ -318,21 +318,21 @@ export default function Home() {
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
                   <p className="text-xs text-blue-800 dark:text-blue-300 font-medium mb-1">💡 Pro Tip</p>
                   <p className="text-xs text-blue-700 dark:text-blue-300">
-                    Look for "data retention" policies - some companies keep your data forever!
+                    {`Look for "data retention" policies — some companies keep your data forever!`}
                   </p>
                 </div>
                 
                 <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-200 dark:border-orange-700">
                   <p className="text-xs text-orange-800 dark:text-orange-300 font-medium mb-1">⚠️ Red Flag</p>
                   <p className="text-xs text-orange-700 dark:text-orange-300">
-                    Avoid services that require you to "indemnify" them - this means you pay their legal costs.
+                    {`Avoid services that require you to "indemnify" them — this means you pay their legal costs.`}
                   </p>
                 </div>
                 
                 <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-700">
                   <p className="text-xs text-green-800 dark:text-green-300 font-medium mb-1">✅ Good Sign</p>
                   <p className="text-xs text-green-700 dark:text-green-300">
-                    Services offering "data portability" respect your right to move your information.
+                    {`Services offering "data portability" respect your right to move your information.`}
                   </p>
                 </div>
               </CardContent>
