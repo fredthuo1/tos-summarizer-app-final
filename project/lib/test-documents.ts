@@ -1,6 +1,6 @@
 // Test documents for end-to-end analysis testing
 export const testDocuments = {
-  highRisk: `Terms of Service - Social Media Platform
+    highRisk: `Terms of Service - Social Media Platform
 Last Updated: January 15, 2024
 Effective Date: January 15, 2024
 
@@ -25,7 +25,7 @@ All disputes must be resolved through company-chosen arbitration. Users waive ju
 7. LIABILITY LIMITATIONS
 We disclaim all warranties and exclude liability for consequential damages. The company assumes no responsibility for data breaches, service interruptions, or financial losses. Users assume all risks associated with service usage.`,
 
-  mediumRisk: `Terms of Service - E-commerce Platform
+    mediumRisk: `Terms of Service - E-commerce Platform
 Last Updated: December 1, 2023
 Effective Date: December 1, 2023
 Governing Law: These terms are governed by the laws of California, United States.
@@ -54,7 +54,7 @@ Our liability is limited to the amount paid for products in the preceding 12 mon
 8. DISPUTE RESOLUTION
 Disputes may be resolved through mediation or binding arbitration. Users retain the right to pursue claims in small claims court for qualifying disputes.`,
 
-  lowRisk: `Terms of Service - Privacy-Focused Cloud Storage
+    lowRisk: `Terms of Service - Privacy-Focused Cloud Storage
 Last Updated: November 15, 2023
 Effective Date: November 15, 2023
 Governing Law: These terms are governed by Swiss privacy laws.
@@ -85,57 +85,62 @@ We provide 90 days advance notice for any account termination. Users have multip
 };
 
 export function getTestDocument(riskLevel: 'high' | 'medium' | 'low'): string {
-  switch (riskLevel) {
-    case 'high':
-      return testDocuments.highRisk;
-    case 'medium':
-      return testDocuments.mediumRisk;
-    case 'low':
-      return testDocuments.lowRisk;
-    default:
-      return testDocuments.mediumRisk;
-  }
+    switch (riskLevel) {
+        case 'high':
+            return testDocuments.highRisk;
+        case 'medium':
+            return testDocuments.mediumRisk;
+        case 'low':
+            return testDocuments.lowRisk;
+        default:
+            return testDocuments.mediumRisk;
+    }
 }
 
 // Test URLs for different risk levels
 export const testUrls = {
-  highRisk: [
-    'https://facebook.com/terms',
-    'https://twitter.com/tos',
-    'https://x.com/terms',
-    'https://instagram.com/terms',
-    'https://tiktok.com/legal/terms-of-service'
-  ],
-  mediumRisk: [
-    'https://amazon.com/gp/help/customer/display.html?nodeId=508088',
-    'https://google.com/policies/terms/',
-    'https://microsoft.com/en-us/servicesagreement/',
-    'https://ebay.com/help/policies/member-behaviour-policies/user-agreement',
-    'https://paypal.com/us/webapps/mpp/ua/useragreement-full'
-  ],
-  lowRisk: [
-    'https://apple.com/legal/internet-services/terms/site.html',
-    'https://signal.org/legal/',
-    'https://protonmail.com/terms-and-conditions',
-    'https://duckduckgo.com/terms',
-    'https://mozilla.org/en-US/about/legal/terms/services/'
-  ]
+    highRisk: [
+        'https://facebook.com/terms',
+        'https://twitter.com/tos',
+        'https://x.com/terms',
+        'https://instagram.com/terms',
+        'https://tiktok.com/legal/terms-of-service'
+    ],
+    mediumRisk: [
+        'https://amazon.com/gp/help/customer/display.html?nodeId=508088',
+        'https://google.com/policies/terms/',
+        'https://microsoft.com/en-us/servicesagreement/',
+        'https://ebay.com/help/policies/member-behaviour-policies/user-agreement',
+        'https://paypal.com/us/webapps/mpp/ua/useragreement-full'
+    ],
+    lowRisk: [
+        'https://apple.com/legal/internet-services/terms/site.html',
+        'https://signal.org/legal/',
+        'https://protonmail.com/terms-and-conditions',
+        'https://duckduckgo.com/terms',
+        'https://mozilla.org/en-US/about/legal/terms/services/'
+    ]
 };
 
 // Sample text snippets for quick testing
 export const testTextSnippets = {
-  highRisk: `We collect all your personal data including browsing history, location, contacts, and messages. This data may be sold to third parties for advertising purposes. You agree to unlimited liability and waive all rights to class action lawsuits. We can terminate your account immediately without notice and you forfeit all paid fees. By using our service, you transfer perpetual rights to all your content to us.`,
-  
-  mediumRisk: `We collect personal information necessary for service operation including your name, email, and usage data. This information may be shared with trusted partners. Our liability is limited to the amount paid for services. We may terminate accounts for violations with reasonable notice. Users retain ownership of their content but grant us a license to display it.`,
-  
-  lowRisk: `We collect minimal data necessary for service operation and comply with GDPR. You have the right to data deletion and portability. We offer a 60-day money back guarantee. We provide 90 days advance notice before any account termination. Users retain full ownership of their content and data. Disputes can be resolved through neutral arbitration or courts.`
+    highRisk: `We collect all your personal data including browsing history, location, contacts, and messages. This data may be sold to third parties for advertising purposes. You agree to unlimited liability and waive all rights to class action lawsuits. We can terminate your account immediately without notice and you forfeit all paid fees. By using our service, you transfer perpetual rights to all your content to us.`,
+
+    mediumRisk: `We collect personal information necessary for service operation including your name, email, and usage data. This information may be shared with trusted partners. Our liability is limited to the amount paid for services. We may terminate accounts for violations with reasonable notice. Users retain ownership of their content but grant us a license to display it.`,
+
+    lowRisk: `We collect minimal data necessary for service operation and comply with GDPR. You have the right to data deletion and portability. We offer a 60-day money back guarantee. We provide 90 days advance notice before any account termination. Users retain full ownership of their content and data. Disputes can be resolved through neutral arbitration or courts.`
 };
 
 export function getTestUrl(riskLevel: 'high' | 'medium' | 'low', index: number = 0): string {
-  const urls = testUrls[riskLevel];
-  return urls[index % urls.length];
+    const riskMap = {
+        'high': testUrls.highRisk,
+        'medium': testUrls.mediumRisk,
+        'low': testUrls.lowRisk
+    };
+    const urls = riskMap[riskLevel];
+    return urls[index % urls.length];
 }
 
 export function getTestTextSnippet(riskLevel: 'high' | 'medium' | 'low'): string {
-  return testTextSnippets[riskLevel];
+    return testTextSnippets[riskLevel];
 }
