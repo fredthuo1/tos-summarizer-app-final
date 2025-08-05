@@ -77,16 +77,6 @@ export default function Home() {
                     <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed" itemProp="description">
                         Free AI-powered terms of service analyzer. Get instant risk assessments, detailed insights, and recommendations for privacy policies and legal documents. No signup required.
                     </p>
-                    <div className="mt-4">
-                        <a
-                            href="/test"
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                            aria-label="Test the analysis pipeline with sample documents"
-                        >
-                            <TestTube className="h-4 w-4 mr-2" />
-                            Test Analysis Pipeline
-                        </a>
-                    </div>
 
                     {/* Breadcrumb Schema */}
                     <script
