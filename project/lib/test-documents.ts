@@ -142,5 +142,10 @@ export function getTestUrl(riskLevel: 'high' | 'medium' | 'low', index: number =
 }
 
 export function getTestTextSnippet(riskLevel: 'high' | 'medium' | 'low'): string {
-    return testTextSnippets[riskLevel];
+    const riskMap = {
+        'high': testTextSnippets.highRisk,
+        'medium': testTextSnippets.mediumRisk,
+        'low': testTextSnippets.lowRisk
+    };
+    return riskMap[riskLevel];
 }
