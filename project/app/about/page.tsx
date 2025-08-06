@@ -203,8 +203,8 @@ export default function AboutPage() {
                             </Link>
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href="/contact">
-                                Get in Touch
+                            <Link href="/legal">
+                                Disclaimer
                             </Link>
                         </Button>
                     </div>
