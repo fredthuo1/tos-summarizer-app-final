@@ -1,307 +1,296 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Mail, MessageSquare, Shield, Clock, MapPin, Phone, Send, AlertCircle, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Shield, Scale, Eye, Lock, FileText, AlertTriangle } from 'lucide-react';
 
-export default function ContactPage() {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        setIsSubmitting(false);
-        setSubmitted(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
-    };
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-            <div className="container mx-auto px-4 py-12 max-w-6xl">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <div className="flex items-center justify-center mb-4">
-                        <MessageSquare className="h-12 w-12 text-blue-600 mr-3" />
-                        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            Contact Us
-                        </h1>
-                    </div>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                        Have questions, feedback, or need support? We're here to help you understand your digital rights.
-                    </p>
-                </div>
-
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Contact Information */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center dark:text-white">
-                                    <Mail className="h-5 w-5 mr-2 text-blue-600" />
-                                    Get in Touch
-                                </CardTitle>
-                                <CardDescription>
-                                    Multiple ways to reach our team
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-start space-x-3">
-                                    <Mail className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">Email Support</h4>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300">support@termsanalyzer.com</p>
-                                        <p className="text-xs text-gray-500">Response within 24 hours</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start space-x-3">
-                                    <MessageSquare className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">General Inquiries</h4>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300">hello@termsanalyzer.com</p>
-                                        <p className="text-xs text-gray-500">Business partnerships & media</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start space-x-3">
-                                    <Shield className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">Privacy & Legal</h4>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300">legal@termsanalyzer.com</p>
-                                        <p className="text-xs text-gray-500">Privacy concerns & legal matters</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center dark:text-white">
-                                    <Clock className="h-5 w-5 mr-2 text-orange-500" />
-                                    Response Times
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">Support Requests</span>
-                                    <Badge variant="secondary">24 hours</Badge>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">General Inquiries</span>
-                                    <Badge variant="secondary">48 hours</Badge>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">Legal Matters</span>
-                                    <Badge variant="secondary">72 hours</Badge>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center dark:text-white">
-                                    <MapPin className="h-5 w-5 mr-2 text-red-500" />
-                                    Company Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div>
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">Terms Analyzer</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        AI-Powered Legal Document Analysis
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Headquarters: San Francisco, CA<br />
-                                        Founded: 2024<br />
-                                        Mission: Democratizing legal document understanding
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Contact Form */}
-                    <div className="lg:col-span-2">
-                        <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center dark:text-white">
-                                    <Send className="h-5 w-5 mr-2 text-blue-600" />
-                                    Send us a Message
-                                </CardTitle>
-                                <CardDescription>
-                                    Fill out the form below and we'll get back to you as soon as possible
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {submitted ? (
-                                    <div className="text-center py-12">
-                                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                                            Message Sent Successfully!
-                                        </h3>
-                                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                                            Thank you for contacting us. We'll respond to your inquiry within 24 hours.
-                                        </p>
-                                        <Button onClick={() => setSubmitted(false)} variant="outline">
-                                            Send Another Message
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={handleSubmit} className="space-y-6">
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="name">Full Name *</Label>
-                                                <Input
-                                                    id="name"
-                                                    name="name"
-                                                    value={formData.name}
-                                                    onChange={handleChange}
-                                                    placeholder="Your full name"
-                                                    required
-                                                    disabled={isSubmitting}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="email">Email Address *</Label>
-                                                <Input
-                                                    id="email"
-                                                    name="email"
-                                                    type="email"
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    placeholder="your.email@example.com"
-                                                    required
-                                                    disabled={isSubmitting}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="subject">Subject *</Label>
-                                            <Input
-                                                id="subject"
-                                                name="subject"
-                                                value={formData.subject}
-                                                onChange={handleChange}
-                                                placeholder="What's this about?"
-                                                required
-                                                disabled={isSubmitting}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="message">Message *</Label>
-                                            <Textarea
-                                                id="message"
-                                                name="message"
-                                                value={formData.message}
-                                                onChange={handleChange}
-                                                placeholder="Tell us more about your inquiry, feedback, or how we can help..."
-                                                className="min-h-[120px] resize-none"
-                                                required
-                                                disabled={isSubmitting}
-                                            />
-                                        </div>
-
-                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                                            <div className="flex items-start space-x-2">
-                                                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                                <div className="text-sm text-blue-800 dark:text-blue-300">
-                                                    <p className="font-medium mb-1">Before contacting support:</p>
-                                                    <ul className="list-disc list-inside space-y-1 text-xs">
-                                                        <li>Check our FAQ section for common questions</li>
-                                                        <li>Try refreshing the page if you're experiencing technical issues</li>
-                                                        <li>Include specific details about any errors you're encountering</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <Button
-                                            type="submit"
-                                            disabled={isSubmitting || !formData.name || !formData.email || !formData.subject || !formData.message}
-                                            className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                                    Sending Message...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Send className="h-4 w-4 mr-2" />
-                                                    Send Message
-                                                </>
-                                            )}
-                                        </Button>
-                                    </form>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* FAQ Section */}
-                        <Card className="mt-8 shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="dark:text-white">Frequently Asked Questions</CardTitle>
-                                <CardDescription>
-                                    Quick answers to common questions
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="border-l-4 border-blue-500 pl-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">Is the service really free?</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Yes! Our analysis service is completely free with no hidden costs or registration required.
-                                    </p>
-                                </div>
-                                <div className="border-l-4 border-green-500 pl-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">How accurate is the AI analysis?</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Our AI provides helpful insights, but it's not a substitute for legal advice. Always consult professionals for important legal matters.
-                                    </p>
-                                </div>
-                                <div className="border-l-4 border-purple-500 pl-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">Do you store my documents?</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        No, we process documents in memory and don't store them on our servers. Your privacy is our priority.
-                                    </p>
-                                </div>
-                                <div className="border-l-4 border-orange-500 pl-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">Can I use this for commercial purposes?</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Our service is designed for individual use. Contact us for commercial licensing options.
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
+export default function LegalPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-4">
+            <Scale className="h-12 w-12 text-blue-600 mr-3" />
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Legal Information
+            </h1>
+          </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Our commitment to transparency, privacy, and legal compliance.
+          </p>
         </div>
-    );
+
+        <Tabs defaultValue="privacy" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 mb-8 h-auto p-1">
+            <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
+            <TabsTrigger value="terms">Terms of Service</TabsTrigger>
+            <TabsTrigger value="disclaimer">Disclaimer</TabsTrigger>
+            <TabsTrigger value="cookies">Cookie Policy</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="privacy">
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center dark:text-white">
+                  <Lock className="h-6 w-6 mr-2 text-green-600" />
+                  Privacy Policy
+                </CardTitle>
+                <CardDescription>
+                  Last updated: {new Date().toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Information We Collect</h3>
+                  <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                    <p><strong>Content Analysis:</strong> We temporarily process the text content you submit for analysis. This content is not stored permanently and is deleted after processing.</p>
+                    <p><strong>Analytics Data:</strong> We collect anonymous usage statistics through Google Analytics to improve our service, including page views, analysis completion rates, and general usage patterns.</p>
+                    <p><strong>Technical Data:</strong> Standard web server logs including IP addresses, browser types, and access times for security and performance monitoring.</p>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">How We Use Your Information</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>To provide AI-powered analysis of terms of service documents</li>
+                    <li>To improve our analysis algorithms and service quality</li>
+                    <li>To monitor and maintain system security and performance</li>
+                    <li>To generate anonymous usage statistics and insights</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Data Protection</h3>
+                  <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                    <p><strong>No Account Required:</strong> We don't require user registration, so we don't collect personal identification information.</p>
+                    <p><strong>Temporary Processing:</strong> Document content is processed in memory and not stored on our servers.</p>
+                    <p><strong>Secure Transmission:</strong> All data is transmitted over encrypted HTTPS connections.</p>
+                    <p><strong>No Third-Party Sharing:</strong> We do not sell, trade, or share your content with third parties.</p>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Your Rights</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>Right to know what data we collect and how it's used</li>
+                    <li>Right to request deletion of any personal data we may have</li>
+                    <li>Right to opt-out of analytics tracking</li>
+                    <li>Right to contact us with privacy concerns</li>
+                  </ul>
+                </section>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    <Shield className="h-4 w-4 inline mr-2" />
+                    We are committed to protecting your privacy and will never use your submitted content for any purpose other than providing the analysis you requested.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="terms">
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center dark:text-white">
+                  <FileText className="h-6 w-6 mr-2 text-blue-600" />
+                  Terms of Service
+                </CardTitle>
+                <CardDescription>
+                  Last updated: {new Date().toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Acceptance of Terms</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    By accessing and using Terms Analyzer, you accept and agree to be bound by the terms and provision of this agreement.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Service Description</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    Terms Analyzer provides AI-powered analysis of legal documents, specifically terms of service and privacy policies. 
+                    Our service is provided "as is" for informational purposes only.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">User Responsibilities</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>Use the service only for legitimate legal document analysis</li>
+                    <li>Do not submit copyrighted content without permission</li>
+                    <li>Do not attempt to reverse engineer or abuse our AI systems</li>
+                    <li>Respect our server resources and do not overload the system</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Intellectual Property</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    You retain all rights to content you submit. We retain rights to our analysis algorithms, interface design, 
+                    and generated insights. Our service and technology are protected by intellectual property laws.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Limitation of Liability</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    Our analysis is for informational purposes only and should not be considered legal advice. 
+                    We are not liable for decisions made based on our analysis. Always consult qualified legal professionals 
+                    for important legal matters.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Service Availability</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    We strive to maintain high availability but do not guarantee uninterrupted service. 
+                    We reserve the right to modify or discontinue the service with reasonable notice.
+                  </p>
+                </section>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="disclaimer">
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center dark:text-white">
+                  <AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />
+                  Legal Disclaimer
+                </CardTitle>
+                <CardDescription>
+                  Important limitations and disclaimers
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                  <h4 className="font-semibold text-orange-800 dark:text-orange-300 mb-2">Not Legal Advice</h4>
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    Terms Analyzer provides automated analysis for informational purposes only. Our analysis does not constitute 
+                    legal advice and should not be relied upon as such. Always consult with qualified legal professionals for 
+                    legal matters.
+                  </p>
+                </div>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">AI Analysis Limitations</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>AI analysis may not catch all nuances or context-specific implications</li>
+                    <li>Legal interpretation can vary based on jurisdiction and specific circumstances</li>
+                    <li>Our analysis is based on general patterns and may not apply to your specific situation</li>
+                    <li>Technology limitations may result in incomplete or inaccurate analysis</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Accuracy Disclaimer</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    While we strive for accuracy, we make no warranties about the completeness, reliability, or accuracy of our analysis. 
+                    Legal documents are complex and our automated analysis may miss important details or context.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Use at Your Own Risk</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    You use our service at your own risk. We are not responsible for any decisions made based on our analysis 
+                    or any consequences resulting from such decisions. Important legal decisions should always involve qualified legal counsel.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Jurisdictional Variations</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    Legal requirements and interpretations vary significantly by jurisdiction. Our analysis provides general insights 
+                    but may not account for specific local laws, regulations, or legal precedents that could affect the interpretation 
+                    of terms of service documents.
+                  </p>
+                </section>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cookies">
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center dark:text-white">
+                  <Eye className="h-6 w-6 mr-2 text-purple-600" />
+                  Cookie Policy
+                </CardTitle>
+                <CardDescription>
+                  How we use cookies and tracking technologies
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">What Are Cookies</h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    Cookies are small text files stored on your device when you visit our website. They help us provide 
+                    a better user experience and understand how our service is used.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Types of Cookies We Use</h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-blue-500 pl-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Essential Cookies</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Required for basic website functionality, including theme preferences and session management.
+                      </p>
+                    </div>
+                    <div className="border-l-4 border-green-500 pl-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Analytics Cookies</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Google Analytics cookies help us understand how visitors use our site to improve the service.
+                      </p>
+                    </div>
+                    <div className="border-l-4 border-purple-500 pl-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Advertising Cookies</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Google AdSense cookies enable us to display relevant advertisements to support our free service.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Managing Cookies</h3>
+                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                    You can control cookies through your browser settings:
+                  </p>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>Block all cookies (may affect website functionality)</li>
+                    <li>Delete existing cookies</li>
+                    <li>Set preferences for specific websites</li>
+                    <li>Receive notifications when cookies are set</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Third-Party Services</h3>
+                  <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                    <p><strong>Google Analytics:</strong> Provides website usage statistics. You can opt-out using Google's opt-out tools.</p>
+                    <p><strong>Google AdSense:</strong> Displays advertisements. You can manage ad preferences through Google's Ad Settings.</p>
+                  </div>
+                </section>
+
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                  <p className="text-sm text-purple-800 dark:text-purple-300">
+                    <Eye className="h-4 w-4 inline mr-2" />
+                    We respect your privacy choices. Essential cookies are necessary for the website to function, 
+                    but you can disable analytics and advertising cookies through your browser settings.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
 }
