@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Quick Test - Terms Analyzer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .test-button.high-risk {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        .test-button.medium-risk {
+            background: linear-gradient(135deg, #d97706, #b45309);
+        }
+        .test-button.low-risk {
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .instructions {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .instructions h4 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 Extension Quick Test Suite</h1>
+        <p>Test the Terms Analyzer browser extension with pre-configured test sites</p>
+        <div id="extensionStatus" class="status info">
+            Checking extension status...
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Quick Installation Check</h2>
+        <div class="instructions">
+            <h4>Before testing, ensure:</h4>
+            <ol>
+                <li>Extension is loaded in Chrome (chrome://extensions/)</li>
+                <li>Extension is pinned to toolbar</li>
+                <li>Terms Analyzer API is running on port 3000</li>
+                <li>Icons are generated and saved in extension/icons/</li>
+            </ol>
+        </div>
+        <button onclick="checkExtensionStatus()" class="test-button">
+            🔍 Check Extension Status
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔴 High Risk Website Tests</h2>
+        <p>These sites should show RED "HIGH" badges and warning notifications:</p>
+        <div class="test-grid">
+            <a href="https://facebook.com/legal/terms" target="_blank" class="test-button high-risk">
+                📘 Facebook Terms
+            </a>
+            <a href="https://twitter.com/tos" target="_blank" class="test-button high-risk">
+                🐦 Twitter Terms
+            </a>
+            <a href="https://instagram.com/terms" target="_blank" class="test-button high-risk">
+                📸 Instagram Terms
+            </a>
+        </div>
+        <div class="instructions">
+            <h4>Expected Results:</h4>
+            <ol>
+                <li>Extension badge turns RED with "HIGH" text</li>
+                <li>Warning notification appears in top-right</li>
+                <li>Popup shows 70-90 risk score</li>
+                <li>Multiple concerns listed</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🟡 Medium Risk Website Tests</h2>
+        <p>These sites should show YELLOW "MED" badges with moderate warnings:</p>
+        <div class="test-grid">
+            <a href="https://amazon.com/gp/help/customer/display.html" target="_blank" class="test-button medium-risk">
+                📦 Amazon Terms
+            </a>
+            <a href="https://google.com/policies/terms/" target="_blank" class="test-button medium-risk">
+                🔍 Google Terms
+            </a>
+            <a href="https://microsoft.com/en-us/servicesagreement/" target="_blank" class="test-button medium-risk">
+                💻 Microsoft Terms
+            </a>
+        </div>
+        <div class="instructions">
+            <h4>Expected Results:</h4>
+            <ol>
+                <li>Extension badge turns YELLOW with "MED" text</li>
+                <li>Moderate notification may appear</li>
+                <li>Popup shows 40-65 risk score</li>
+                <li>Balanced concerns and highlights</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🟢 Low Risk Website Tests</h2>
+        <p>These sites should show GREEN "LOW" badges with minimal warnings:</p>
+        <div class="test-grid">
+            <a href="https://signal.org/legal/" target="_blank" class="test-button low-risk">
+                📱 Signal Terms
+            </a>
+            <a href="https://apple.com/legal/internet-services/terms/site.html" target="_blank" class="test-button low-risk">
+                🍎 Apple Terms
+            </a>
+            <a href="https://mozilla.org/en-US/about/legal/terms/services/" target="_blank" class="test-button low-risk">
+                🦊 Mozilla Terms
+            </a>
+        </div>
+        <div class="instructions">
+            <h4>Expected Results:</h4>
+            <ol>
+                <li>Extension badge turns GREEN with "LOW" text</li>
+                <li>Minimal or no notifications</li>
+                <li>Popup shows 15-35 risk score</li>
+                <li>More highlights than concerns</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>⚪ No Terms Website Tests</h2>
+        <p>These sites should show GRAY "?" badges (no terms detected):</p>
+        <div class="test-grid">
+            <a href="https://example.com" target="_blank" class="test-button">
+                🌐 Example.com
+            </a>
+            <a href="https://httpbin.org" target="_blank" class="test-button">
+                🔧 HTTPBin
+            </a>
+        </div>
+        <div class="instructions">
+            <h4>Expected Results:</h4>
+            <ol>
+                <li>Extension badge shows GRAY "?" text</li>
+                <li>No notifications appear</li>
+                <li>Popup shows "No terms found" message</li>
+                <li>Links section empty or minimal</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Cache Testing</h2>
+        <p>Test the 24-hour caching system:</p>
+        <div class="instructions">
+            <h4>Testing Steps:</h4>
+            <ol>
+                <li>Visit any test site above (first time)</li>
+                <li>Wait for analysis to complete</li>
+                <li>Visit the same site again immediately</li>
+                <li>Check popup - should show "(CACHED)" indicator</li>
+                <li>Click "Refresh" button to bypass cache</li>
+            </ol>
+        </div>
+        <button onclick="clearAllCache()" class="test-button">
+            🗑️ Clear All Cache
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>🛠️ Troubleshooting</h2>
+        <div id="troubleshootingResults"></div>
+        <button onclick="runDiagnostics()" class="test-button">
+            🔧 Run Diagnostics
+        </button>
+        <button onclick="testAPIConnectivity()" class="test-button">
+            🌐 Test API Connection
+        </button>
+    </div>
+
+    <script>
+        function checkExtensionStatus() {
+            const status = document.getElementById('extensionStatus');
+            
+            if (typeof chrome === 'undefined') {
+                status.className = 'status error';
+                status.textContent = '❌ Chrome extension API not available. Open this page in Chrome.';
+                return;
+            }
+            
+            // Check if extension is loaded
+            chrome.management.getSelf((info) => {
+                if (chrome.runtime.lastError) {
+                    status.className = 'status error';
+                    status.textContent = '❌ Extension not loaded properly. Check chrome://extensions/';
+                } else {
+                    status.className = 'status success';
+                    status.textContent = `✅ Extension loaded: ${info.name} v${info.version}`;
+                }
+            });
+        }
+        
+        function clearAllCache() {
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                chrome.storage.local.clear(() => {
+                    alert('✅ All extension cache cleared!');
+                });
+            } else {
+                alert('❌ Cannot clear cache - extension not available');
+            }
+        }
+        
+        function testAPIConnectivity() {
+            const results = document.getElementById('troubleshootingResults');
+            results.innerHTML = '<div class="status info">🔍 Testing API connectivity...</div>';
+            
+            fetch('http://localhost:3000/api/analyze')
+                .then(response => response.json())
+                .then(data => {
+                    results.innerHTML = `
+                        <div class="status success">
+                            ✅ API Connection Successful<br>
+                            <small>Response: ${JSON.stringify(data, null, 2)}</small>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    results.innerHTML = `
+                        <div class="status error">
+                            ❌ API Connection Failed<br>
+                            <small>Error: ${error.message}</small><br>
+                            <small>Make sure Terms Analyzer is running on port 3000</small>
+                        </div>
+                    `;
+                });
+        }
+        
+        function runDiagnostics() {
+            const results = document.getElementById('troubleshootingResults');
+            const diagnostics = [];
+            
+            // Check Chrome API
+            if (typeof chrome === 'undefined') {
+                diagnostics.push('❌ Chrome extension API not available');
+            } else {
+                diagnostics.push('✅ Chrome extension API available');
+                
+                // Check permissions
+                if (chrome.storage) {
+                    diagnostics.push('✅ Storage permission granted');
+                } else {
+                    diagnostics.push('❌ Storage permission missing');
+                }
+                
+                if (chrome.tabs) {
+                    diagnostics.push('✅ Tabs permission granted');
+                } else {
+                    diagnostics.push('❌ Tabs permission missing');
+                }
+                
+                if (chrome.scripting) {
+                    diagnostics.push('✅ Scripting permission granted');
+                } else {
+                    diagnostics.push('❌ Scripting permission missing');
+                }
+            }
+            
+            // Check if running in extension context
+            if (window.location.protocol === 'chrome-extension:') {
+                diagnostics.push('✅ Running in extension context');
+            } else {
+                diagnostics.push('ℹ️ Running in web context (normal for this test page)');
+            }
+            
+            results.innerHTML = `
+                <div class="status info">
+                    <h4>🔧 Diagnostic Results:</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${diagnostics.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Auto-check status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkExtensionStatus, 500);
+        });
+    </script>
+</body>
+</html>

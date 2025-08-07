@@ -1,0 +1,95 @@
+{
+  "testSites": {
+    "highRisk": [
+      {
+        "url": "https://facebook.com/legal/terms",
+        "name": "Facebook Terms",
+        "expectedRisk": "high",
+        "expectedScore": "70-85",
+        "description": "Social media platform with extensive data collection"
+      },
+      {
+        "url": "https://twitter.com/tos", 
+        "name": "Twitter Terms",
+        "expectedRisk": "high",
+        "expectedScore": "75-90",
+        "description": "Social platform with broad content licensing"
+      },
+      {
+        "url": "https://instagram.com/terms",
+        "name": "Instagram Terms", 
+        "expectedRisk": "high",
+        "expectedScore": "70-85",
+        "description": "Photo sharing with Meta data practices"
+      }
+    ],
+    "mediumRisk": [
+      {
+        "url": "https://amazon.com/gp/help/customer/display.html",
+        "name": "Amazon Terms",
+        "expectedRisk": "medium", 
+        "expectedScore": "40-60",
+        "description": "E-commerce with balanced commercial terms"
+      },
+      {
+        "url": "https://google.com/policies/terms/",
+        "name": "Google Terms",
+        "expectedRisk": "medium",
+        "expectedScore": "45-65", 
+        "description": "Tech giant with comprehensive data usage"
+      },
+      {
+        "url": "https://microsoft.com/en-us/servicesagreement/",
+        "name": "Microsoft Terms",
+        "expectedRisk": "medium",
+        "expectedScore": "40-60",
+        "description": "Enterprise services with standard protections"
+      }
+    ],
+    "lowRisk": [
+      {
+        "url": "https://signal.org/legal/",
+        "name": "Signal Terms",
+        "expectedRisk": "low",
+        "expectedScore": "15-30",
+        "description": "Privacy-focused messaging with minimal data collection"
+      },
+      {
+        "url": "https://apple.com/legal/internet-services/terms/site.html",
+        "name": "Apple Terms", 
+        "expectedRisk": "low",
+        "expectedScore": "20-35",
+        "description": "Consumer-friendly terms with strong privacy focus"
+      },
+      {
+        "url": "https://mozilla.org/en-US/about/legal/terms/services/",
+        "name": "Mozilla Terms",
+        "expectedRisk": "low", 
+        "expectedScore": "15-30",
+        "description": "Open-source organization with user-centric policies"
+      }
+    ],
+    "noTerms": [
+      {
+        "url": "https://example.com",
+        "name": "Example Site",
+        "expectedRisk": "unknown",
+        "expectedScore": "0",
+        "description": "Simple site with no detectable legal documents"
+      },
+      {
+        "url": "https://httpbin.org",
+        "name": "HTTP Testing",
+        "expectedRisk": "unknown", 
+        "expectedScore": "0",
+        "description": "API testing service without terms"
+      }
+    ]
+  },
+  "testingNotes": {
+    "cacheTest": "Visit the same site twice to test 24-hour caching",
+    "rateLimitTest": "Make 10+ requests quickly to test rate limiting", 
+    "performanceTest": "Test with slow network and multiple tabs",
+    "errorTest": "Test with invalid URLs and network failures"
+  }
+}
