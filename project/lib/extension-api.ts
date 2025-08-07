@@ -8,6 +8,17 @@ export interface ExtensionAnalysisRequest {
   domain: string;
   userAgent?: string;
   timestamp?: number;
+  inlineContent?: {
+    cookieBanners: Array<{ text: string; selector: string; visible: boolean }>;
+    privacyNotices: Array<{ text: string; selector: string; fullLength: number }>;
+    termsSnippets: Array<{ text: string; selector: string; fullLength: number }>;
+  };
+  metadata?: {
+    hasGDPRBanner: boolean;
+    hasCookieConsent: boolean;
+    hasSSL: boolean;
+    wordCount: number;
+  };
 }
 
 export interface ExtensionAnalysisResponse {
@@ -15,90 +26,151 @@ export interface ExtensionAnalysisResponse {
   riskLevel: 'low' | 'medium' | 'high' | 'unknown';
   score: number;
   message: string;
-  links: Array<{
+  documents: Array<{
     url: string;
     text: string;
-    type: string;
+    category: string;
+    confidence: number;
   }>;
   analyses: Array<{
-    link: any;
+    document: any;
     analysis: any;
+    contentLength: number;
   }>;
+  inlineAnalysis?: {
+    type: string;
+    analysis: any;
+    sources: {
+      cookieBanners: number;
+      privacyNotices: number;
+      termsSnippets: number;
+    };
+  };
+  metadata: any;
   summary: {
     concerns: string[];
     highlights: string[];
     totalDocuments: number;
+    hasInlineContent: boolean;
+    categoryRisks?: Record<string, string[]>;
+    analysisDepth: number;
   };
   cached?: boolean;
   timestamp: number;
 }
 
-// Analyze multiple URLs for browser extension
-export async function analyzeForExtension(
-  urls: string[], 
-  domain: string
+// Enhanced analysis for comprehensive extension data
+export async function analyzeComprehensiveExtensionData(
+  extractionData: any
 ): Promise<ExtensionAnalysisResponse> {
   
-  if (urls.length === 0) {
+  const { prioritizedDocuments, inlineContent, metadata } = extractionData;
+  const domain = metadata.domain;
+  
+  if (prioritizedDocuments.length === 0 && (!inlineContent || 
+      (inlineContent.cookieBanners.length === 0 && inlineContent.privacyNotices.length === 0))) {
     return {
       domain,
       riskLevel: 'unknown',
       score: 0,
-      message: 'No terms or privacy policy links found on this website.',
-      links: [],
+      message: 'No terms, privacy policies, or cookie policies found on this website.',
+      documents: [],
       analyses: [],
+      metadata: metadata,
       summary: {
         concerns: [],
         highlights: [],
-        totalDocuments: 0
+        totalDocuments: 0,
+        hasInlineContent: false,
+        analysisDepth: 0
       },
       timestamp: Date.now()
     };
   }
 
   const analyses = [];
+  const inlineAnalyses = [];
   
-  // Analyze each URL (limit to 3 most relevant)
-  const relevantUrls = urls.slice(0, 3);
+  // Analyze document URLs (limit to top 3 to avoid rate limits)
+  const topDocuments = prioritizedDocuments.slice(0, 3);
   
-  for (const url of relevantUrls) {
+  for (const doc of topDocuments) {
     try {
-      // Fetch content from URL
-      const content = await fetchUrlContent(url);
+      console.log(`📄 Analyzing document: ${doc.url} (${doc.category}, confidence: ${doc.confidence}%)`);
       
-      // Analyze with AI
-      const analysis = await analyzeWithAI(content);
+      // Fetch document content
+      const content = await fetchUrlContent(doc.url);
       
-      analyses.push({
-        link: {
-          url,
-          text: extractTitleFromUrl(url),
-          type: determineDocumentType(url)
-        },
-        analysis
-      });
+      if (content && content.length > 100) {
+        // Analyze with AI
+        const analysis = await analyzeWithAI(content);
+        
+        analyses.push({
+          document: doc,
+          analysis,
+          contentLength: content.length
+        });
+        
+        console.log(`✅ Analysis complete for ${doc.url}: ${analysis.riskLevel} risk (${analysis.score}/100)`);
+      }
     } catch (error) {
-      console.error(`Error analyzing ${url}:`, error);
+      console.error(`❌ Failed to analyze ${doc.url}:`, error);
+      // Continue with other documents
+    }
+  }
+  
+  // Analyze inline content if available
+  if (inlineContent && (inlineContent.cookieBanners.length > 0 || 
+      inlineContent.privacyNotices.length > 0 || inlineContent.termsSnippets.length > 0)) {
+    
+    try {
+      console.log(`📝 Analyzing inline content: ${inlineContent.cookieBanners.length} banners, ${inlineContent.privacyNotices.length} notices, ${inlineContent.termsSnippets.length} snippets`);
+      
+      const inlineText = [
+        ...inlineContent.cookieBanners.map(b => `COOKIE BANNER: ${b.text}`),
+        ...inlineContent.privacyNotices.map(n => `PRIVACY NOTICE: ${n.text}`),
+        ...inlineContent.termsSnippets.map(s => `TERMS SNIPPET: ${s.text}`)
+      ].join('\n\n');
+      
+      if (inlineText.length > 100) {
+        const analysis = await analyzeWithAI(inlineText);
+        
+        inlineAnalyses.push({
+          type: 'inline',
+          analysis,
+          sources: {
+            cookieBanners: inlineContent.cookieBanners.length,
+            privacyNotices: inlineContent.privacyNotices.length,
+            termsSnippets: inlineContent.termsSnippets.length
+          }
+        });
+        
+        console.log(`✅ Inline content analysis complete: ${analysis.riskLevel} risk (${analysis.score}/100)`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to analyze inline content:', error);
       // Continue with other URLs even if one fails
     }
   }
 
-  if (analyses.length === 0) {
+  // Combine all analyses
+  const allAnalyses = [...analyses.map(a => a.analysis), ...inlineAnalyses.map(i => i.analysis)];
+  
+  if (allAnalyses.length === 0) {
     return {
       domain,
       riskLevel: 'unknown',
       score: 0,
-      message: 'Could not analyze the found links.',
-      links: urls.map(url => ({
-        url,
-        text: extractTitleFromUrl(url),
-        type: determineDocumentType(url)
-      })),
+      message: 'Could not analyze the found documents.',
+      documents: prioritizedDocuments,
       analyses: [],
+      metadata: metadata,
       summary: {
         concerns: [],
         highlights: [],
-        totalDocuments: 0
+        totalDocuments: 0,
+        hasInlineContent: false,
+        analysisDepth: 0
       },
       timestamp: Date.now()
     };
@@ -106,48 +178,80 @@ export async function analyzeForExtension(
 
   // Combine analyses
   const avgScore = Math.round(
-    analyses.reduce((sum, a) => sum + a.analysis.score, 0) / analyses.length
+    allAnalyses.reduce((sum, analysis) => sum + analysis.score, 0) / allAnalyses.length
   );
 
-  const highestRisk = analyses.reduce((highest, current) => {
+  const highestRisk = allAnalyses.reduce((highest, analysis) => {
     const riskLevels = { low: 1, medium: 2, high: 3, unknown: 0 };
-    return riskLevels[current.analysis.riskLevel] > riskLevels[highest] 
-      ? current.analysis.riskLevel 
+    return riskLevels[analysis.riskLevel] > riskLevels[highest] 
+      ? analysis.riskLevel 
       : highest;
   }, 'low');
 
-  const allConcerns = analyses.flatMap(a => a.analysis.concerns);
-  const allHighlights = analyses.flatMap(a => a.analysis.highlights);
+  const allConcerns = allAnalyses.flatMap(analysis => analysis.concerns);
+  const allHighlights = allAnalyses.flatMap(analysis => analysis.highlights);
+  
+  // Create comprehensive message
+  const documentCount = analyses.length;
+  const inlineCount = inlineAnalyses.length;
+  let message = `Analyzed ${documentCount} document(s)`;
+  if (inlineCount > 0) {
+    message += ` and ${inlineCount} inline content section(s)`;
+  }
+  message += ` from this website.`;
+  
+  // Calculate category risks
+  const categoryRisks = {};
+  allAnalyses.forEach(analysis => {
+    Object.entries(analysis.categories).forEach(([category, data]) => {
+      if (!categoryRisks[category]) {
+        categoryRisks[category] = [];
+      }
+      categoryRisks[category].push(data.riskLevel);
+    });
+  });
 
   return {
     domain,
     riskLevel: highestRisk as 'low' | 'medium' | 'high',
     score: avgScore,
-    message: `Analyzed ${analyses.length} document(s) from this website.`,
-    links: urls.map(url => ({
-      url,
-      text: extractTitleFromUrl(url),
-      type: determineDocumentType(url)
-    })),
+    message: message,
+    documents: prioritizedDocuments,
     analyses,
+    inlineAnalysis: inlineAnalyses.length > 0 ? inlineAnalyses[0] : undefined,
+    metadata: metadata,
     summary: {
-      concerns: [...new Set(allConcerns)].slice(0, 5),
-      highlights: [...new Set(allHighlights)].slice(0, 3),
-      totalDocuments: analyses.length
+      concerns: [...new Set(allConcerns)].slice(0, 8),
+      highlights: [...new Set(allHighlights)].slice(0, 5),
+      totalDocuments: documentCount,
+      hasInlineContent: inlineCount > 0,
+      categoryRisks: categoryRisks,
+      analysisDepth: documentCount + inlineCount
     },
     timestamp: Date.now()
   };
 }
 
-// Fetch content from URL (simplified version for extension)
+// Enhanced URL content fetching with better error handling
 async function fetchUrlContent(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  
   try {
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
-        'User-Agent': 'Terms Analyzer Extension/1.0'
+        'User-Agent': 'Terms Analyzer Extension/1.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache'
       },
-      timeout: 10000 // 10 second timeout
+      credentials: 'omit',
+      mode: 'cors',
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -155,20 +259,66 @@ async function fetchUrlContent(url: string): Promise<string> {
 
     const html = await response.text();
     
-    // Extract text content from HTML (basic implementation)
-    const textContent = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]*>/g, ' ')
+    // Enhanced text extraction
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Remove non-content elements
+    const elementsToRemove = doc.querySelectorAll('script, style, noscript, nav, header, footer, .nav, .header, .footer, .menu, .sidebar, .advertisement, .ads, .social-share');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Try to find main content areas
+    const contentSelectors = [
+      'main', 
+      '[role="main"]', 
+      '.main-content', 
+      '.content', 
+      '.terms-content', 
+      '.policy-content', 
+      '.legal-content', 
+      'article',
+      '.article',
+      '.document-content',
+      '.page-content'
+    ];
+    
+    let textContent = '';
+    
+    // Try each content selector
+    for (const selector of contentSelectors) {
+      const contentEl = doc.querySelector(selector);
+      if (contentEl && contentEl.textContent.length > textContent.length) {
+        textContent = contentEl.textContent;
+      }
+    }
+    
+    // Fallback to body if no main content found
+    if (!textContent || textContent.length < 200) {
+      textContent = doc.body?.textContent || '';
+    }
+    
+    // Clean up the text
+    const cleanContent = textContent
       .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n')
       .trim();
 
-    if (textContent.length < 100) {
+    if (cleanContent.length < 100) {
       throw new Error('Document appears to be too short or empty');
     }
 
-    return textContent;
+    // Truncate very long documents
+    if (cleanContent.length > 100000) {
+      return cleanContent.substring(0, 100000) + '\n\n[Document truncated for analysis]';
+    }
+
+    return cleanContent;
   } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timeout - ${url} took too long to load`);
+    }
     throw new Error(`Failed to fetch content from ${url}: ${error.message}`);
   }
 }

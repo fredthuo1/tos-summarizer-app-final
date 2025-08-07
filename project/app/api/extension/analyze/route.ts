@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeForExtension, checkExtensionRateLimit } from '@/lib/extension-api';
+import { analyzeComprehensiveExtensionData, checkExtensionRateLimit } from '@/lib/extension-api';
 
 export async function POST(request: NextRequest) {
   try {
-    const { urls, domain, userAgent } = await request.json();
+    const { extractionData, domain, userAgent } = await request.json();
 
-    // Validate input
-    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    // Validate extraction data
+    if (!extractionData || !extractionData.prioritizedDocuments) {
       return NextResponse.json(
-        { error: 'URLs array is required' },
+        { error: 'Extraction data is required' },
         { status: 400 }
       );
     }
@@ -28,29 +28,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate URLs
-    const validUrls = urls.filter(url => {
-      try {
-        new URL(url);
-        return true;
-      } catch {
-        return false;
-      }
-    });
+    const documentCount = extractionData.prioritizedDocuments?.length || 0;
+    const inlineCount = (extractionData.inlineContent?.cookieBanners?.length || 0) + 
+                       (extractionData.inlineContent?.privacyNotices?.length || 0) + 
+                       (extractionData.inlineContent?.termsSnippets?.length || 0);
+    
+    console.log(`🔍 Extension API: Comprehensive analysis for ${domain}`);
+    console.log(`📄 Documents: ${documentCount}, Inline content: ${inlineCount}`);
 
-    if (validUrls.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid URLs provided' },
-        { status: 400 }
-      );
-    }
+    // Perform comprehensive analysis
+    const analysis = await analyzeComprehensiveExtensionData(extractionData);
 
-    console.log(`🔍 Extension API: Analyzing ${validUrls.length} URLs for domain: ${domain}`);
-
-    // Analyze URLs
-    const analysis = await analyzeForExtension(validUrls, domain);
-
-    console.log(`✅ Extension API: Analysis completed for ${domain} - Risk: ${analysis.riskLevel}, Score: ${analysis.score}`);
+    console.log(`✅ Extension API: Comprehensive analysis completed for ${domain}`);
+    console.log(`📊 Results: ${analysis.riskLevel} risk, ${analysis.score}/100 score, ${analysis.summary.analysisDepth} total analyses`);
 
     return NextResponse.json({
       success: true,
@@ -58,7 +48,9 @@ export async function POST(request: NextRequest) {
       metadata: {
         domain,
         timestamp: new Date().toISOString(),
-        urlsAnalyzed: validUrls.length,
+        documentsAnalyzed: documentCount,
+        inlineContentAnalyzed: inlineCount,
+        totalAnalysisDepth: analysis.summary.analysisDepth,
         userAgent: userAgent || 'Unknown',
         processingTime: Date.now() - analysis.timestamp
       }
@@ -69,7 +61,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       { 
-        error: 'Analysis failed. Please try again.',
+        error: 'Comprehensive analysis failed. Please try again.',
         details: process.env.NODE_ENV === 'development' ? String(error) : undefined
       },
       { status: 500 }
@@ -80,7 +72,14 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     message: 'Terms Analyzer Extension API',
-    version: '1.0.0',
+    version: '2.0.0',
+    features: [
+      'Comprehensive document analysis',
+      'Inline content extraction',
+      'Cookie banner analysis',
+      'Privacy notice detection',
+      'Multi-document risk assessment'
+    ],
     endpoints: {
       analyze: 'POST /api/extension/analyze'
     },
@@ -88,6 +87,12 @@ export async function GET() {
       requests: 10,
       window: '1 hour',
       scope: 'per domain'
+    },
+    analysisCapabilities: {
+      maxDocuments: 3,
+      inlineContentSupport: true,
+      cacheEnabled: true,
+      cacheDuration: '24 hours'
     }
   });
 }

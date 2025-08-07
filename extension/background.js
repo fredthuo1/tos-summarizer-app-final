@@ -2,9 +2,12 @@
 
 const API_BASE_URL = 'http://localhost:3000'; // Change to production URL when deployed
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const MAX_CONCURRENT_ANALYSES = 3; // Limit concurrent API calls
+const ANALYSIS_TIMEOUT = 30000; // 30 seconds timeout
 
 // Store for analyzed websites
 let analyzedSites = new Map();
+let activeAnalyses = new Set();
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
@@ -12,6 +15,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     try {
       const domain = new URL(tab.url).hostname;
       
+      // Skip if already analyzing this domain
+      if (activeAnalyses.has(domain)) {
+        console.log(`Already analyzing ${domain}, skipping...`);
+        return;
+      }
+
       // Check if we've analyzed this domain recently
       const cached = await getCachedAnalysis(domain);
       if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
@@ -24,10 +33,15 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         return;
       }
 
-      // Inject content script to look for terms and privacy links
+      // Inject enhanced content extractor
       chrome.scripting.executeScript({
         target: { tabId: tabId },
-        function: findTermsAndPrivacyLinks
+        files: ['content-extractor.js']
+      });
+      
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: initializeComprehensiveExtraction
       });
     } catch (error) {
       console.error('Error processing tab update:', error);
@@ -37,12 +51,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  if (message.type === 'FOUND_TERMS_LINKS') {
-    const { domain, links } = message.data;
+  if (message.type === 'COMPREHENSIVE_EXTRACTION_COMPLETE') {
+    const { domain, extractionData } = message.data;
+    
+    // Mark domain as being analyzed
+    activeAnalyses.add(domain);
     
     try {
-      // Analyze the found links
-      const analysis = await analyzeTermsLinks(links);
+      console.log(`🔍 Starting comprehensive analysis for ${domain}`);
+      console.log(`📄 Found ${extractionData.prioritizedDocuments.length} documents and ${extractionData.inlineContent.cookieBanners.length} cookie banners`);
+      
+      // Analyze all found content
+      const analysis = await analyzeComprehensiveContent(extractionData);
       
       // Cache the result
       await cacheAnalysis(domain, analysis);
@@ -63,6 +83,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         type: 'ANALYSIS_ERROR',
         error: error.message
       });
+    } finally {
+      // Remove from active analyses
+      activeAnalyses.delete(domain);
     }
   }
   
@@ -73,160 +96,311 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
 });
 
-// Function to find terms and privacy links (injected into page)
-function findTermsAndPrivacyLinks() {
+// Enhanced function to initialize comprehensive extraction
+function initializeComprehensiveExtraction() {
+  if (typeof TermsContentExtractor === 'undefined') {
+    console.error('TermsContentExtractor not loaded');
+    return;
+  }
+  
   const domain = window.location.hostname;
-  const links = [];
+  console.log(`🔍 Starting comprehensive extraction for ${domain}`);
   
-  // Common selectors for terms and privacy links
-  const selectors = [
-    'a[href*="terms"]',
-    'a[href*="privacy"]',
-    'a[href*="cookie"]',
-    'a[href*="legal"]',
-    'a[href*="policy"]',
-    'a[href*="tos"]',
-    'a[href*="eula"]'
-  ];
-  
-  // Common text patterns
-  const textPatterns = [
-    /terms\s+of\s+(service|use)/i,
-    /privacy\s+policy/i,
-    /cookie\s+policy/i,
-    /legal\s+notice/i,
-    /user\s+agreement/i,
-    /end\s+user\s+license/i
-  ];
-  
-  // Find links by selectors
-  selectors.forEach(selector => {
-    const elements = document.querySelectorAll(selector);
-    elements.forEach(el => {
-      if (el.href && !links.some(link => link.url === el.href)) {
-        links.push({
-          url: el.href,
-          text: el.textContent.trim(),
-          type: determineType(el.href, el.textContent)
-        });
-      }
-    });
-  });
-  
-  // Find links by text content
-  const allLinks = document.querySelectorAll('a[href]');
-  allLinks.forEach(link => {
-    const text = link.textContent.trim().toLowerCase();
-    const href = link.href.toLowerCase();
+  try {
+    const extractor = new TermsContentExtractor();
+    const extractionData = extractor.getComprehensiveAnalysisData();
     
-    textPatterns.forEach(pattern => {
-      if (pattern.test(text) || pattern.test(href)) {
-        if (!links.some(l => l.url === link.href)) {
-          links.push({
-            url: link.href,
-            text: link.textContent.trim(),
-            type: determineType(link.href, link.textContent)
-          });
-        }
-      }
+    console.log(`📊 Extraction complete:`, {
+      documents: extractionData.prioritizedDocuments.length,
+      cookieBanners: extractionData.inlineContent.cookieBanners.length,
+      privacyNotices: extractionData.inlineContent.privacyNotices.length,
+      termsSnippets: extractionData.inlineContent.termsSnippets.length
     });
-  });
-  
-  // Send found links to background script
-  chrome.runtime.sendMessage({
-    type: 'FOUND_TERMS_LINKS',
-    data: { domain, links }
-  });
-  
-  function determineType(url, text) {
-    const combined = (url + ' ' + text).toLowerCase();
-    if (combined.includes('privacy')) return 'privacy';
-    if (combined.includes('cookie')) return 'cookie';
-    if (combined.includes('terms')) return 'terms';
-    if (combined.includes('legal')) return 'legal';
-    return 'unknown';
+    
+    // Send comprehensive data to background script
+    chrome.runtime.sendMessage({
+      type: 'COMPREHENSIVE_EXTRACTION_COMPLETE',
+      data: { domain, extractionData }
+    });
+  } catch (error) {
+    console.error('Comprehensive extraction failed:', error);
+    chrome.runtime.sendMessage({
+      type: 'EXTRACTION_ERROR',
+      data: { domain, error: error.message }
+    });
   }
 }
 
-// Analyze terms links using the main application API
-async function analyzeTermsLinks(links) {
-  if (links.length === 0) {
+// Enhanced analysis function for comprehensive content
+async function analyzeComprehensiveContent(extractionData) {
+  const { prioritizedDocuments, inlineContent, metadata } = extractionData;
+  
+  if (prioritizedDocuments.length === 0 && inlineContent.cookieBanners.length === 0) {
     return {
+      domain: metadata.domain,
       riskLevel: 'unknown',
       score: 0,
-      message: 'No terms or privacy policy links found on this website.',
-      links: []
+      message: 'No terms, privacy policies, or cookie policies found on this website.',
+      documents: [],
+      inlineAnalysis: null,
+      metadata: metadata,
+      summary: {
+        concerns: [],
+        highlights: [],
+        totalDocuments: 0,
+        hasInlineContent: false
+      },
+      timestamp: Date.now()
     };
   }
-  
+
   const analyses = [];
+  const inlineAnalyses = [];
   
-  // Analyze each link (limit to 3 most relevant)
-  const relevantLinks = links
-    .filter(link => link.type !== 'unknown')
-    .slice(0, 3);
+  // Analyze document links (limit to top 3 to avoid rate limits)
+  const topDocuments = prioritizedDocuments.slice(0, 3);
   
-  for (const link of relevantLinks) {
+  for (const doc of topDocuments) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: link.url,
-          source: link.url,
-          type: 'url'
-        }),
-      });
+      console.log(`📄 Analyzing document: ${doc.url} (${doc.category})`);
       
-      if (response.ok) {
-        const result = await response.json();
-        analyses.push({
-          link: link,
-          analysis: result.analysis
+      // Fetch document content
+      const content = await fetchDocumentContent(doc.url);
+      
+      if (content && content.length > 100) {
+        // Analyze with API
+        const response = await fetch(`${API_BASE_URL}/api/analyze`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: content,
+            source: doc.url,
+            type: 'url'
+          }),
         });
+        
+        if (response.ok) {
+          const result = await response.json();
+          analyses.push({
+            document: doc,
+            analysis: result.analysis,
+            contentLength: content.length
+          });
+          console.log(`✅ Analysis complete for ${doc.url}: ${result.analysis.riskLevel} risk`);
+        }
       }
     } catch (error) {
-      console.error(`Error analyzing ${link.url}:`, error);
+      console.error(`❌ Failed to analyze ${doc.url}:`, error);
+      // Continue with other documents
     }
   }
   
-  if (analyses.length === 0) {
+  // Analyze inline content (cookie banners, privacy notices)
+  if (inlineContent.cookieBanners.length > 0 || inlineContent.privacyNotices.length > 0) {
+    try {
+      const inlineText = [
+        ...inlineContent.cookieBanners.map(b => b.text),
+        ...inlineContent.privacyNotices.map(n => n.text),
+        ...inlineContent.termsSnippets.map(s => s.text)
+      ].join('\n\n');
+      
+      if (inlineText.length > 100) {
+        console.log(`📝 Analyzing inline content (${inlineText.length} characters)`);
+        
+        const response = await fetch(`${API_BASE_URL}/api/analyze`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: inlineText,
+            source: `${metadata.domain} - Inline Content`,
+            type: 'text'
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          inlineAnalyses.push({
+            type: 'inline',
+            analysis: result.analysis,
+            sources: {
+              cookieBanners: inlineContent.cookieBanners.length,
+              privacyNotices: inlineContent.privacyNotices.length,
+              termsSnippets: inlineContent.termsSnippets.length
+            }
+          });
+          console.log(`✅ Inline content analysis complete: ${result.analysis.riskLevel} risk`);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to analyze inline content:', error);
+    }
+  }
+
+  // Combine all analyses
+  return combineComprehensiveAnalyses(analyses, inlineAnalyses, extractionData);
+}
+
+// Enhanced document content fetching
+async function fetchDocumentContent(url) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ANALYSIS_TIMEOUT);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Terms Analyzer Extension/1.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache'
+      },
+      credentials: 'omit',
+      mode: 'cors',
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const html = await response.text();
+    
+    // Extract clean text content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Remove non-content elements
+    const elementsToRemove = doc.querySelectorAll('script, style, noscript, nav, header, footer, .nav, .header, .footer, .menu, .sidebar, .advertisement, .ads');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Try to find main content
+    const contentSelectors = ['main', '[role="main"]', '.main-content', '.content', '.terms-content', '.policy-content', '.legal-content', 'article'];
+    let content = '';
+    
+    for (const selector of contentSelectors) {
+      const contentEl = doc.querySelector(selector);
+      if (contentEl && contentEl.textContent.length > content.length) {
+        content = contentEl.textContent;
+      }
+    }
+    
+    // Fallback to body if no main content found
+    if (!content || content.length < 200) {
+      content = doc.body?.textContent || '';
+    }
+    
+    // Clean and validate content
+    const cleanContent = content
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
+    
+    if (cleanContent.length < 100) {
+      throw new Error('Document content too short or empty');
+    }
+    
+    if (cleanContent.length > 100000) {
+      // Truncate very long documents
+      return cleanContent.substring(0, 100000) + '\n\n[Document truncated for analysis]';
+    }
+    
+    return cleanContent;
+    
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - document took too long to load');
+    }
+    throw error;
+  }
+}
+
+// Combine multiple analyses into comprehensive result
+function combineComprehensiveAnalyses(documentAnalyses, inlineAnalyses, extractionData) {
+  const allAnalyses = [...documentAnalyses.map(d => d.analysis), ...inlineAnalyses.map(i => i.analysis)];
+  
+  if (allAnalyses.length === 0) {
     return {
+      domain: extractionData.metadata.domain,
       riskLevel: 'unknown',
       score: 0,
-      message: 'Could not analyze the found links.',
-      links: links
+      message: 'No analyzable content found on this website.',
+      documents: extractionData.prioritizedDocuments,
+      analyses: [],
+      inlineAnalysis: null,
+      metadata: extractionData.metadata,
+      summary: {
+        concerns: [],
+        highlights: [],
+        totalDocuments: 0,
+        hasInlineContent: false
+      },
+      timestamp: Date.now()
     };
   }
   
-  // Combine analyses
+  // Calculate combined metrics
   const avgScore = Math.round(
-    analyses.reduce((sum, a) => sum + a.analysis.score, 0) / analyses.length
+    allAnalyses.reduce((sum, analysis) => sum + analysis.score, 0) / allAnalyses.length
   );
   
-  const highestRisk = analyses.reduce((highest, current) => {
-    const riskLevels = { low: 1, medium: 2, high: 3, unknown: 0 };
-    return riskLevels[current.analysis.riskLevel] > riskLevels[highest] 
-      ? current.analysis.riskLevel 
+  // Determine highest risk level
+  const riskLevels = { low: 1, medium: 2, high: 3 };
+  const highestRisk = allAnalyses.reduce((highest, analysis) => {
+    return riskLevels[analysis.riskLevel] > riskLevels[highest] 
+      ? analysis.riskLevel 
       : highest;
   }, 'low');
   
-  const allConcerns = analyses.flatMap(a => a.analysis.concerns);
-  const allHighlights = analyses.flatMap(a => a.analysis.highlights);
+  // Combine all concerns and highlights
+  const allConcerns = allAnalyses.flatMap(analysis => analysis.concerns);
+  const allHighlights = allAnalyses.flatMap(analysis => analysis.highlights);
+  const uniqueConcerns = [...new Set(allConcerns)];
+  const uniqueHighlights = [...new Set(allHighlights)];
+  
+  // Create comprehensive message
+  const documentCount = documentAnalyses.length;
+  const inlineCount = inlineAnalyses.length;
+  let message = `Analyzed ${documentCount} document(s)`;
+  if (inlineCount > 0) {
+    message += ` and ${inlineCount} inline content section(s)`;
+  }
+  message += ` from this website.`;
+  
+  // Enhanced summary with category breakdown
+  const categoryRisks = {};
+  allAnalyses.forEach(analysis => {
+    Object.entries(analysis.categories).forEach(([category, data]) => {
+      if (!categoryRisks[category]) {
+        categoryRisks[category] = [];
+      }
+      categoryRisks[category].push(data.riskLevel);
+    });
+  });
   
   return {
+    domain: extractionData.metadata.domain,
     riskLevel: highestRisk,
     score: avgScore,
-    message: `Analyzed ${analyses.length} document(s) from this website.`,
-    links: links,
-    analyses: analyses,
+    message: message,
+    documents: extractionData.prioritizedDocuments,
+    analyses: documentAnalyses,
+    inlineAnalysis: inlineAnalyses.length > 0 ? inlineAnalyses[0] : null,
+    metadata: extractionData.metadata,
     summary: {
-      concerns: [...new Set(allConcerns)].slice(0, 5),
-      highlights: [...new Set(allHighlights)].slice(0, 3),
-      totalDocuments: analyses.length
-    }
+      concerns: uniqueConcerns.slice(0, 8),
+      highlights: uniqueHighlights.slice(0, 5),
+      totalDocuments: documentCount,
+      hasInlineContent: inlineCount > 0,
+      categoryRisks: categoryRisks,
+      analysisDepth: documentCount + inlineCount
+    },
+    timestamp: Date.now()
   };
 }
 
@@ -273,16 +447,23 @@ function updateBadge(tabId, riskLevel) {
   });
 }
 
+// Enhanced cleanup with better performance
 // Clear old cache entries periodically
 setInterval(async () => {
   const storage = await chrome.storage.local.get();
   const now = Date.now();
+  let cleanedCount = 0;
   
   for (const [key, value] of Object.entries(storage)) {
     if (key.startsWith('analysis_') && value.timestamp) {
       if (now - value.timestamp > CACHE_DURATION * 7) { // Keep for 7 days max
         await chrome.storage.local.remove([key]);
+        cleanedCount++;
       }
     }
+  }
+  
+  if (cleanedCount > 0) {
+    console.log(`🧹 Cleaned ${cleanedCount} old cache entries`);
   }
 }, 60 * 60 * 1000); // Run every hour
