@@ -38,9 +38,11 @@ export default function ExtensionPage() {
             Get instant risk assessments without leaving your browsing experience.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              <Download className="h-5 w-5 mr-2" />
-              Download Extension
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" asChild>
+              <Link href="/extension/icons/generate-icons.html" target="_blank">
+                <Download className="h-5 w-5 mr-2" />
+                Generate Icons
+              </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
               <Link href="https://github.com/your-repo/terms-analyzer-extension" target="_blank">

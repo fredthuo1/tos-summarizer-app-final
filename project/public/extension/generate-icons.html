@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Generator - Terms Analyzer Extension</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .icon-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .icon-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .icon-preview h3 {
+            margin: 10px 0 5px 0;
+            color: #374151;
+        }
+        .icon-preview p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        canvas {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 10px 0;
+            background: white;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .download-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .generate-all-btn {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.2s;
+        }
+        .generate-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
+        }
+        .instructions {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .instructions h2 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .instructions ol, .instructions ul {
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .instructions code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .preview-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Terms Analyzer Extension Icons</h1>
+        <p>Generate high-quality PNG icons for the browser extension in all required sizes.</p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="generateAllIcons()" class="generate-all-btn">
+                🚀 Generate All Icons
+            </button>
+        </div>
+        
+        <div id="status" class="status info">
+            Click "Generate All Icons" to create PNG files for download
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h2>📋 Quick Start Instructions</h2>
+        <ol>
+            <li><strong>Generate Icons:</strong> Click the "Generate All Icons" button above</li>
+            <li><strong>Download Files:</strong> Click each download button to save the PNG files</li>
+            <li><strong>Save to Extension:</strong> Place files in <code>extension/icons/</code> with exact names:
+                <div class="preview-grid">
+                    <div class="preview-item">
+                        <strong>icon16.png</strong><br>
+                        <small>16×16 pixels</small>
+                    </div>
+                    <div class="preview-item">
+                        <strong>icon32.png</strong><br>
+                        <small>32×32 pixels</small>
+                    </div>
+                    <div class="preview-item">
+                        <strong>icon48.png</strong><br>
+                        <small>48×48 pixels</small>
+                    </div>
+                    <div class="preview-item">
+                        <strong>icon128.png</strong><br>
+                        <small>128×128 pixels</small>
+                    </div>
+                </div>
+            </li>
+            <li><strong>Test Extension:</strong> Load the extension in Chrome developer mode</li>
+        </ol>
+    </div>
+
+    <div class="icon-container" id="iconContainer">
+        <!-- Icons will be generated here -->
+    </div>
+
+    <div class="instructions">
+        <h2>🎯 Design Features</h2>
+        <ul>
+            <li><strong>Shield Symbol:</strong> Represents security and protection analysis</li>
+            <li><strong>Checkmark:</strong> Indicates verification and trustworthiness</li>
+            <li><strong>Brand Colors:</strong> Blue to purple gradient matching the main app</li>
+            <li><strong>Scalable Design:</strong> Optimized for clarity at all sizes (16px to 128px)</li>
+            <li><strong>Professional Look:</strong> Clean, modern design suitable for browser toolbar</li>
+        </ul>
+    </div>
+
+    <script>
+        function generateAllIcons() {
+            const container = document.getElementById('iconContainer');
+            const status = document.getElementById('status');
+            
+            container.innerHTML = '';
+            status.className = 'status info';
+            status.textContent = '🎨 Generating icons...';
+            
+            const sizes = [
+                { size: 16, name: 'icon16.png', description: 'Toolbar icon (browser toolbar)' },
+                { size: 32, name: 'icon32.png', description: 'Windows taskbar & notifications' },
+                { size: 48, name: 'icon48.png', description: 'Extension management page' },
+                { size: 128, name: 'icon128.png', description: 'Chrome Web Store listing' }
+            ];
+            
+            let generated = 0;
+            
+            sizes.forEach(({ size, name, description }) => {
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'icon-preview';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                
+                // Scale up small icons for better visibility
+                const displaySize = size < 32 ? size * 4 : size;
+                canvas.style.width = `${displaySize}px`;
+                canvas.style.height = `${displaySize}px`;
+                canvas.style.imageRendering = size < 32 ? 'pixelated' : 'auto';
+                
+                drawIcon(canvas, size);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = `📥 Download ${name}`;
+                downloadBtn.onclick = () => downloadIcon(canvas, name);
+                
+                iconDiv.innerHTML = `
+                    <h3>${size}×${size} pixels</h3>
+                    <p>${description}</p>
+                `;
+                iconDiv.appendChild(canvas);
+                iconDiv.appendChild(downloadBtn);
+                
+                container.appendChild(iconDiv);
+                
+                generated++;
+                if (generated === sizes.length) {
+                    status.className = 'status success';
+                    status.textContent = '✅ All icons generated successfully! Click download buttons to save PNG files.';
+                }
+            });
+        }
+        
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const center = size / 2;
+            
+            // Enable high-quality rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#2563eb');
+            gradient.addColorStop(1, '#7c3aed');
+            
+            // Background circle (white with subtle border)
+            if (size >= 24) {
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(center, center, size * 0.47, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Subtle border
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = size >= 48 ? 2 : 1;
+                ctx.stroke();
+            }
+            
+            // Shield shape
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            
+            const shieldScale = size >= 32 ? 0.32 : 0.38;
+            const shieldWidth = size * shieldScale;
+            const shieldHeight = size * shieldScale * 1.3;
+            const shieldTop = center - shieldHeight * 0.45;
+            
+            // Draw shield path
+            ctx.moveTo(center, shieldTop);
+            ctx.lineTo(center - shieldWidth/2, shieldTop + shieldHeight * 0.25);
+            ctx.lineTo(center - shieldWidth/2, shieldTop + shieldHeight * 0.75);
+            ctx.quadraticCurveTo(center - shieldWidth/4, shieldTop + shieldHeight * 0.95, center, shieldTop + shieldHeight);
+            ctx.quadraticCurveTo(center + shieldWidth/4, shieldTop + shieldHeight * 0.95, center + shieldWidth/2, shieldTop + shieldHeight * 0.75);
+            ctx.lineTo(center + shieldWidth/2, shieldTop + shieldHeight * 0.25);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Shield highlight (inner glow effect)
+            if (size >= 32) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(center, shieldTop + 3);
+                ctx.lineTo(center - shieldWidth/2 + 3, shieldTop + shieldHeight * 0.25 + 2);
+                ctx.lineTo(center - shieldWidth/2 + 3, shieldTop + shieldHeight * 0.7);
+                ctx.stroke();
+            }
+            
+            // Checkmark
+            if (size >= 20) {
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = Math.max(2, size * 0.05);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                const checkScale = size * 0.12;
+                const checkY = center - size * 0.02;
+                ctx.moveTo(center - checkScale, checkY);
+                ctx.lineTo(center - checkScale/3, checkY + checkScale/1.5);
+                ctx.lineTo(center + checkScale, checkY - checkScale/1.5);
+                ctx.stroke();
+            }
+            
+            // Small "T" for Terms (only on larger icons)
+            if (size >= 48) {
+                ctx.fillStyle = '#2563eb';
+                ctx.font = `bold ${Math.max(10, size * 0.11)}px Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('T', center, center + size * 0.3);
+            }
+        }
+        
+        function downloadIcon(canvas, filename) {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Update status
+                const status = document.getElementById('status');
+                status.className = 'status success';
+                status.textContent = `✅ Downloaded ${filename} successfully!`;
+                setTimeout(() => {
+                    status.className = 'status info';
+                    status.textContent = 'Ready to download more icons';
+                }, 2000);
+            }, 'image/png');
+        }
+        
+        function downloadAllIcons() {
+            const canvases = document.querySelectorAll('canvas');
+            const filenames = ['icon16.png', 'icon32.png', 'icon48.png', 'icon128.png'];
+            
+            canvases.forEach((canvas, index) => {
+                setTimeout(() => {
+                    downloadIcon(canvas, filenames[index]);
+                }, index * 500); // Stagger downloads
+            });
+        }
+        
+        // Auto-generate icons on page load
+        window.addEventListener('load', () => {
+            setTimeout(generateAllIcons, 500);
+        });
+    </script>
+</body>
+</html>

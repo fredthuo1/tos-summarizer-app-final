@@ -1,4 +1,4 @@
-﻿import './globals.css';
+import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
@@ -178,7 +178,7 @@ export default function RootLayout({
                     <h4 className="font-semibold mb-4">Product</h4>
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li><Link href="/" className="hover:text-blue-400 transition-colors">Analyze Terms</Link></li>
-                     {/* <li><Link href="/test" className="hover:text-blue-400 transition-colors">Test Pipeline</Link></li> */}
+                      <li><Link href="/extension" className="hover:text-blue-400 transition-colors">Browser Extension</Link></li>
                       <li><Link href="/about" className="hover:text-blue-400 transition-colors">How It Works</Link></li>
                     </ul>
                   </div>

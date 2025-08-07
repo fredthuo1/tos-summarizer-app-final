@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -39,6 +39,13 @@ export function MobileNavigation() {
               onClick={() => setMobileMenuOpen(false)}
             >
               ℹ️ About
+            </Link>
+            <Link 
+              href="/extension" 
+              className="block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              🧩 Extension
             </Link>
             <Link 
               href="/legal" 
