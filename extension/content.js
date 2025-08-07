@@ -515,3 +515,4 @@ observer.observe(document.body, {
 window.addEventListener('beforeunload', () => {
   observer.disconnect();
 }
+)
